@@ -1,6 +1,6 @@
 import warnings
 
-letters = "0123456789abcdefghijklmnopqrstuvwxyz&':,$=!-().+?;/_"
+letters = "0123456789abcdefghijklmnopqrstuvwxyz&':,$=!-().+?;/_ "
 letters = letters.upper()
 letterlst = list(letters)
 
@@ -31,7 +31,7 @@ morse = ['-----',
          '---',
          '.--.',
          '--.-',
-         '-.-',
+         '.-.',
          '...',
          '-',
          '..-',
@@ -56,73 +56,48 @@ morse = ['-----',
          '-.-.-.',
          '-..-.',
          '..--.-',
+         '/',
 	]
-def morse_audio( item ):
+morseToLetter = {morseL: letter for morseL, letter in zip(morse, letterlst)}
+lettertoMorse = {letter: morseL for letter, morseL in zip(letterlst, morse)}
+def morse_audio(item):
 
-    from pyglet import media
-    import pyglet
+    from playsound import playsound
     import time
     import glob
     import os
     import wave
     from contextlib import closing
-    pyglet.lib.load_library('avbin')
-    pyglet.have_avbin=True
     files = []
     wavs = []
     audios = []
-    for file in glob.glob('Morse\\*.mp3'):
-        files.append(file)
-    for file in glob.glob('Morse\\*.wav'):
-        wavs.append(file)
-    one = list(item)
-    str_list = [x.strip(' ') for x in one]
-    str_list = [x.strip('/') for x in str_list]
 
-    for s in str_list[0]:
-        if s != "-" and s !=  ".":
-            list(item)
-            for letter in item:
-               for i in range(0, 51):
-                    if letter == " ":
-                        time.sleep(1.5)
-                        audios.append("Morse\\noise3.wav")
-                        break
-                    if letter != letterlst[i] and letter != letterlst[i].lower():
-                        continue
-                    else:
-                        #print ("1 " + files[i])
-                        audio = media.load(files[i])
-                        audio.play()
-                        audios.append(wavs[i])
-                        audios.append("Morse\\noise2.wav")
-                        time.sleep(1)
-        else:
-            lst = item.split()
-            #print (' '.join(lst))
-            for code in lst:
-                for i in range(0, 51):
-                    if code == "/":
-                        time.sleep(1.5)
-                        audios.append("Morse\\noise3.wav")
-                        break
-                    if code != morse[i]:
-                        continue
-                    else:
-                        #print (files[i])
-                        audio = media.load("Morse\\0_number_morse_code.wav")
-                        audio.play()
-                        audios.append(wavs[i])
-                        audios.append("Morse\\noise2.wav")
-                        time.sleep(1)
-                        break
-    outfile = "Encoded.wav"
+    morseDot = "Morse\\morse_dih.wav"
+    morseDash = "Morse\\morse_dah.wav"
+    morsePause = "Morse\\noise2.wav"
+    morseSpace = "Morse\\noise3.wav"
+                 
+    if any(item.strip('./- ')):
+        word = decrypter(item)
+    else:
+        word = item
+    for l in word:
+        if l == '.':
+            audios.append(morseDot)
+            audios.append(morsePause)
+        elif l == '-':
+            audios.append(morseDash)
+            audios.append(morsePause)
+        elif l == '/':
+            audios.append(morseSpace)
+
+    fileName = morsecode(word)
+    outfile = fileName+".wav"
 
     data= []
     for file in audios:
         w = wave.open(file, 'rb')
         lol = w.getparams()
-        #print (lol)
         data.append( [w.getparams(), w.readframes(w.getnframes())] )
         w.close()
 
@@ -136,40 +111,26 @@ def morse_audio( item ):
         for audioo in audios:
             with closing(wave.open(audioo)) as w:
                 output.writeframes(w.readframes(w.getnframes()))
+    
+    playsound(outfile.replace(" ", "%20"))
+    return outfile
             
-def decrypter( word ):
+def decrypter(word):
     list(word)
-    result = []
-    for letter in word:
-        for i in range(0, 51):
-            if letter == " ":
-                result.append("/ ")
-                break
-            if letter != letterlst[i] and letter != letterlst[i].lower():
-                continue
-            else:
-                result.append(morse[i])
-                result.append(" ")
-    print (''.join(result))
+    if not word:
+        return ''
+    result = [lettertoMorse[x.upper()]+' ' for x in word]
+    result = ''.join(result).rstrip()
+    return result
     
 def morsecode(morse_code):
-    lst = morse_code.split()
-    decoded = []
-    for code in lst:
-        for i in range(0, 51):
-            if code == "/":
-                decoded.append(" ")
-                break
-            if code != morse[i]:
-                continue
-            else:
-                decoded.append(letterlst[i])
-    print  (''.join(decoded))
+    result = (''.join([morseToLetter[x] for x in morse_code.split(' ')]))
+    return result
     
 warnings.filterwarnings("ignore")
-decrypter("0123456789ÁÄ@&':,$=!-().+?;/_")
+decrypter("0123456789':,$=!-().+?;/_")
 morsecode("----- .---- ..--- ...-- ....- ..... -.... --... ---.. ----. .-... .----. ---... --..-- ...-..- -...- -.-.-- -....- -.--.- -.--. .-.-.- .-.-. ..--.. -.-.-. -..-.")
-morse_audio("I am mateen's code -_-!")#Put text here to get converted to audio
+#morse_audio("I am mateen's code -_-!")#Put text here to get converted to audio
 
 
         
