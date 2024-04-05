@@ -60,9 +60,17 @@ morse = ['-----',
 	]
 morseToLetter = {morseL: letter for morseL, letter in zip(morse, letterlst)}
 lettertoMorse = {letter: morseL for letter, morseL in zip(letterlst, morse)}
-def morse_audio(item):
+def morse_audio(text, speed=0.25):
 
-    from playsound import playsound
+
+    """Create and play morse code audio representation of text, return wav file location
+
+    Args:
+
+        item: text you want to see in morse code
+        speed: how fast you want the morse code to play (default = 0.3)
+    """
+    from playaudio import playaudio
     import time
     import glob
     import os
@@ -75,18 +83,30 @@ def morse_audio(item):
     morseDot = "Morse\\morse_dih.wav"
     morseDash = "Morse\\morse_dah.wav"
     morsePause = "Morse\\noise2.wav"
-    morseSpace = "Morse\\noise3.wav"
-                 
-    if any(item.strip('./- ')):
-        word = decrypter(item)
+    morseSpace = "Morse\\noise3.wav"       
+    sampleRate=8000
+    numChannels=1
+    sampleWidth=1
+    with(wave.open("Morse\\tempSpace.wav", 'wb')) as spaceWave:
+        pauseFrames = int(speed * sampleRate)
+        spaceWave.setnchannels(numChannels)
+        spaceWave.setsampwidth(sampleWidth)
+        spaceWave.setframerate(sampleRate)
+        silence_frames = b'\x00' * sampleWidth * numChannels * pauseFrames
+        spaceWave.writeframes(silence_frames)
+        morsePause = "Morse\\tempSpace.wav"
+    if any(text.strip('./- ')):
+        word = decrypter(text)
     else:
-        word = item
+        word = text
     for l in word:
         if l == '.':
             audios.append(morseDot)
             audios.append(morsePause)
         elif l == '-':
             audios.append(morseDash)
+            audios.append(morsePause)
+        elif l == ' ':
             audios.append(morsePause)
         elif l == '/':
             audios.append(morseSpace)
@@ -111,8 +131,8 @@ def morse_audio(item):
         for audioo in audios:
             with closing(wave.open(audioo)) as w:
                 output.writeframes(w.readframes(w.getnframes()))
-    
-    playsound(outfile.replace(" ", "%20"))
+    file = os.path.dirname(__file__) + "\\" + outfile
+    playaudio(file)
     return outfile
             
 def decrypter(word):
