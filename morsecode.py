@@ -60,7 +60,7 @@ morse = ['-----',
 	]
 morseToLetter = {morseL: letter for morseL, letter in zip(morse, letterlst)}
 lettertoMorse = {letter: morseL for letter, morseL in zip(letterlst, morse)}
-def morse_audio(text, speed=0.25):
+def morse_audio(text, speed=0.25, play=False):
 
 
     """Create and play morse code audio representation of text, return wav file location
@@ -71,30 +71,27 @@ def morse_audio(text, speed=0.25):
         speed: how fast you want the morse code to play (default = 0.3)
     """
     from playaudio import playaudio
-    import time
-    import glob
     import os
     import wave
     from contextlib import closing
-    files = []
-    wavs = []
+    
     audios = []
 
-    morseDot = "Morse\\morse_dih.wav"
-    morseDash = "Morse\\morse_dah.wav"
-    morsePause = "Morse\\noise2.wav"
-    morseSpace = "Morse\\noise3.wav"       
+    morseDot = "Morse/morse_dih.wav"
+    morseDash = "Morse/morse_dah.wav"
+    morsePause = "Morse/noise2.wav"
+    morseSpace = "Morse/noise3.wav"       
     sampleRate=8000
     numChannels=1
     sampleWidth=1
-    with(wave.open("Morse\\tempSpace.wav", 'wb')) as spaceWave:
+    with(wave.open("Morse/tempSpace.wav", 'wb')) as spaceWave:
         pauseFrames = int(speed * sampleRate)
         spaceWave.setnchannels(numChannels)
         spaceWave.setsampwidth(sampleWidth)
         spaceWave.setframerate(sampleRate)
         silence_frames = b'\x00' * sampleWidth * numChannels * pauseFrames
         spaceWave.writeframes(silence_frames)
-        morsePause = "Morse\\tempSpace.wav"
+        morsePause = "Morse/tempSpace.wav"
     if any(text.strip('./- ')):
         word = decrypter(text)
     else:
@@ -147,10 +144,36 @@ def morsecode(morse_code):
     result = (''.join([morseToLetter[x] for x in morse_code.split(' ')]))
     return result
     
-warnings.filterwarnings("ignore")
-decrypter("0123456789':,$=!-().+?;/_")
-morsecode("----- .---- ..--- ...-- ....- ..... -.... --... ---.. ----. .-... .----. ---... --..-- ...-..- -...- -.-.-- -....- -.--.- -.--. .-.-.- .-.-. ..--.. -.-.-. -..-.")
-#morse_audio("I am mateen's code -_-!")#Put text here to get converted to audio
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Convert text to Morse code or Morse code to text.')
+    parser.add_argument('-t', nargs='+', help='Text to be converted to Morse code')
+    parser.add_argument('-m', nargs='+', help='Morse code to be converted to text')
+    parser.add_argument('-a', nargs='+', help='Text to be converted to audio')
+    parser.add_argument('-s', type=float, help='Set speed for audio conversion (lower = faster)')
+    parser.add_argument('-p', action='store_true', help='Play audio')
+    args = parser.parse_args()
+    if args.t:
+        text = ' '.join(args.t)
+        morse_code = decrypter(text)
+        print(f"Text to Morse code conversion selected. Morse code: '{morse_code}'")
+    elif args.m:
+        morse_code = ' '.join(args.m)
+        text = morsecode(morse_code)
+        print(f"Morse code to text conversion selected. Text: '{text}'")
+    elif args.a:
+        text = ' '.join(args.a)
+        speed = args.s if args.s else 0.15
+        play_audio = args.p
+        morse_audio(text, speed, play_audio)
+        print("Audio conversion selected.")
+    else:
+        print("No conversion selected.")
+
+    #Example usage
+    #decrypter("0123456789':,$=!-().+?;/_")
+    #morsecode("----- .---- ..--- ...-- ....- ..... -.... --... ---.. ----. .-... .----. ---... --..-- ...-..- -...- -.-.-- -....- -.--.- -.--. .-.-.- .-.-. ..--.. -.-.-. -..-.")
+    #morse_audio("I am mateen's code -_-!")#Put text here to get converted to audio
 
 
         
